@@ -74,6 +74,8 @@ def index():
 
 @app.route("/login")
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
 
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()

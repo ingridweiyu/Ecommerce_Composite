@@ -14,9 +14,15 @@ class User(UserMixin):
         self.email = email
         self.profile_pic = profile_pic
 
+
+    @staticmethod
+    def is_authenticated(self):
+        return True
+
+
+
     @staticmethod
     def parseJSON(obj):
-        print(obj)
         users = obj["data"]
         if len(users) <= 0:
             return None
