@@ -2,7 +2,7 @@ from flask_login import UserMixin
 
 import requests, json
 
-USER_URL = "ec2-3-87-226-6.compute-1.amazonaws.com/"
+USER_URL = "http://ec2-3-87-226-6.compute-1.amazonaws.com/"
 
 
 class User(UserMixin):
