@@ -1,10 +1,10 @@
 # Python standard libraries
 import json
 import os
-import sqlite3
-
+from functools import wraps
+from flask_cors import CORS
 # Third party libraries
-from flask import Flask, redirect, request, url_for
+from flask import Flask, redirect, request, url_for, session
 from flask_login import (
     LoginManager,
     current_user,
@@ -15,13 +15,17 @@ from flask_login import (
 from oauthlib.oauth2 import WebApplicationClient
 import requests
 
+#ONLY FOR DEVELOPMENT PURPOSES!!!!
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+app = Flask(__name__)
+CORS(app)
 # Internal imports
-from db import init_db_command
-from user import User
+# from user import User
 
 # Configuration
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
+GOOGLE_CLIENT_ID = "270365524910-oe134bpt9ft738904gb5i2n004a1vm0c.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"
 GOOGLE_DISCOVERY_URL = (
     "https://accounts.google.com/.well-known/openid-configuration"
 )
@@ -40,13 +44,16 @@ login_manager.init_app(app)
 def unauthorized():
     return "You must be logged in to access this content.", 403
 
+def login_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'unique_id' in session:
+            return f(*args, **kwargs)
+        else:
+            return redirect("/login")
 
-# Naive database setup
-try:
-    init_db_command()
-except sqlite3.OperationalError:
-    # Assume it's already been created
-    pass
+    return wrap
+
 
 # OAuth2 client setup
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
@@ -55,7 +62,7 @@ client = WebApplicationClient(GOOGLE_CLIENT_ID)
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
 def load_user(user_id):
-    return User.get(user_id)
+    pass# return User.get(user_id)
 
 
 @app.route("/")
@@ -131,21 +138,24 @@ def callback():
         users_email = userinfo_response.json()["email"]
         picture = userinfo_response.json()["picture"]
         users_name = userinfo_response.json()["given_name"]
+        #store in session
+        session['unique_id'] = unique_id
+
     else:
         return "User email not available or not verified by Google.", 400
 
     # Create a user in our db with the information provided
     # by Google
-    user = User(
-        id_=unique_id, name=users_name, email=users_email, profile_pic=picture
-    )
+    # user = User(
+    #     id_=unique_id, name=users_name, email=users_email, profile_pic=picture
+    # )
 
     # Doesn't exist? Add to database
-    if not User.get(unique_id):
-        User.create(unique_id, users_name, users_email, picture)
+    # if not User.get(unique_id):
+    #     User.create(unique_id, users_name, users_email, picture)
 
     # Begin user session by logging the user in
-    login_user(user)
+    # login_user(user)
 
     # Send user back to homepage
     return redirect(url_for("index"))
@@ -163,4 +173,4 @@ def get_google_provider_cfg():
 
 
 if __name__ == "__main__":
-    app.run(ssl_context="adhoc")
+    app.run(host="0.0.0.0", port=5012)
