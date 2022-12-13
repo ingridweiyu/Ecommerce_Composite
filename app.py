@@ -3,6 +3,7 @@ import json
 import os
 from functools import wraps
 from flask_cors import CORS
+
 # Third party libraries
 from flask import Flask, redirect, request, url_for
 from flask_login import (
@@ -15,8 +16,8 @@ from flask_login import (
 from oauthlib.oauth2 import WebApplicationClient
 import requests
 
-#ONLY FOR DEVELOPMENT PURPOSES!!!!
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+# ONLY FOR DEVELOPMENT PURPOSES!!!!
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 app = Flask(__name__)
 CORS(app)
@@ -24,11 +25,11 @@ CORS(app)
 from user import User
 
 # Configuration
-GOOGLE_CLIENT_ID = "270365524910-oe134bpt9ft738904gb5i2n004a1vm0c.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET = "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"
-GOOGLE_DISCOVERY_URL = (
-    "https://accounts.google.com/.well-known/openid-configuration"
+GOOGLE_CLIENT_ID = (
+    "270365524910-oe134bpt9ft738904gb5i2n004a1vm0c.apps.googleusercontent.com"
 )
+GOOGLE_CLIENT_SECRET = "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"
+GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
 # Flask app setup
 app = Flask(__name__)
@@ -43,8 +44,6 @@ login_manager.init_app(app)
 @login_manager.unauthorized_handler
 def unauthorized():
     return "You must be logged in to access this content.", 403
-
-
 
 
 # OAuth2 client setup
@@ -116,7 +115,6 @@ def callback():
 
     # Parse the tokens!
     client.parse_request_body_response(json.dumps(token_response.json()))
-    print("BEFORE")
 
     # Now that we have tokens (yay) let's find and hit URL
     # from Google that gives you user's profile information,
@@ -125,7 +123,6 @@ def callback():
     uri, headers, body = client.add_token(userinfo_endpoint)
     userinfo_response = requests.get(uri, headers=headers, data=body)
 
-    print("AFTER")
     # We want to make sure their email is verified.
     # The user authenticated with Google, authorized our
     # app, and now we've verified their email through Google!
@@ -138,27 +135,24 @@ def callback():
     else:
         return "User email not available or not verified by Google.", 400
 
-
-
     # Create a user in our db with the information provided
     # by Google
-    dict1 = users_name.split(' ')
+    dict1 = users_name.split(" ")
     user = User(
-        id_=unique_id, first_name=dict1[0], last_name=dict1[1], email=users_email, profile_pic=picture
+        id_=unique_id,
+        first_name=dict1[0],
+        last_name=dict1[1],
+        email=users_email,
+        profile_pic=picture,
     )
-
-    print("hello1")
 
     # Doesn't exist? Add to database
     User.get(unique_id)
     if not User.get(unique_id):
-        User.create(unique_id, dict1[0],dict1[1], users_email, picture)
+        User.create(unique_id, dict1[0], dict1[1], users_email, picture)
 
-
-    print("hello")
     # Begin user session by logging the user in
     login_user(user)
-
 
     # Send user back to homepage
     return redirect(url_for("index"))

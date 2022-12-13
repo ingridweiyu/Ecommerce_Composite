@@ -17,13 +17,17 @@ class User(UserMixin):
     @staticmethod
     def parseJSON(obj):
         print(obj)
-        users = obj['data']
+        users = obj["data"]
         if len(users) <= 0:
             return None
         else:
-            user = users[0]['data']
+            user = users[0]["data"]
             return User(
-                user['user_id'], user['first_name'], user['last_name'], None, user['picture']
+                user["user_id"],
+                user["first_name"],
+                user["last_name"],
+                None,
+                user["picture"],
             )
 
     @staticmethod
@@ -42,4 +46,4 @@ class User(UserMixin):
             "last_name": last_name,
             "picture": profile_pic,
         }
-        requests.post(USER_URL, data=json.dumps(obj))
+        requests.post(USER_URL, json=obj)
