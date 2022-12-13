@@ -59,6 +59,7 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
+    print(current_user.is_authenticated)
     if current_user.is_authenticated:
         return (
             "<p>Hello, {}! You're logged in! Email: {}</p>"
@@ -74,6 +75,7 @@ def index():
 
 @app.route("/login")
 def login():
+
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
@@ -114,6 +116,7 @@ def callback():
 
     # Parse the tokens!
     client.parse_request_body_response(json.dumps(token_response.json()))
+    print("BEFORE")
 
     # Now that we have tokens (yay) let's find and hit URL
     # from Google that gives you user's profile information,
@@ -122,6 +125,7 @@ def callback():
     uri, headers, body = client.add_token(userinfo_endpoint)
     userinfo_response = requests.get(uri, headers=headers, data=body)
 
+    print("AFTER")
     # We want to make sure their email is verified.
     # The user authenticated with Google, authorized our
     # app, and now we've verified their email through Google!
@@ -134,6 +138,8 @@ def callback():
     else:
         return "User email not available or not verified by Google.", 400
 
+
+
     # Create a user in our db with the information provided
     # by Google
     dict1 = users_name.split(' ')
@@ -141,13 +147,18 @@ def callback():
         id_=unique_id, first_name=dict1[0], last_name=dict1[1], email=users_email, profile_pic=picture
     )
 
+    print("hello1")
+
     # Doesn't exist? Add to database
+    User.get(unique_id)
     if not User.get(unique_id):
-        User.create(unique_id, users_name, users_email, picture)
+        User.create(unique_id, dict1[0],dict1[1], users_email, picture)
 
 
+    print("hello")
     # Begin user session by logging the user in
     login_user(user)
+
 
     # Send user back to homepage
     return redirect(url_for("index"))

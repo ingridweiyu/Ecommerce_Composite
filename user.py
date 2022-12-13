@@ -2,7 +2,7 @@ from flask_login import UserMixin
 
 import requests, json
 
-USER_URL = "http://ec2-3-87-226-6.compute-1.amazonaws.com/"
+USER_URL = "http://ec2-3-87-226-6.compute-1.amazonaws.com:8080/users"
 
 
 class User(UserMixin):
@@ -15,15 +15,15 @@ class User(UserMixin):
         self.profile_pic = profile_pic
 
     @staticmethod
-    def parseJSON(json_str):
-        obj = json.loads(json_str)
-        users = obj.data
+    def parseJSON(obj):
+        print(obj)
+        users = obj['data']
         if len(users) <= 0:
             return None
         else:
-            user = users[0].data
+            user = users[0]['data']
             return User(
-                user.user_id, user.first_name, user.last_name, None, user.picture
+                user['user_id'], user['first_name'], user['last_name'], None, user['picture']
             )
 
     @staticmethod
