@@ -1,7 +1,6 @@
 # Python standard libraries
 import json
 import os
-from functools import wraps
 from flask_cors import CORS
 # Third party libraries
 from flask import Flask, redirect, request, url_for
@@ -82,7 +81,7 @@ def login():
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
         redirect_uri=request.base_url + "/callback",
-        scope=["openid", "email", "profile"],
+        scope=["openid", "email", "profile"]
     )
     return redirect(request_uri)
 
@@ -143,7 +142,6 @@ def callback():
 
 
     # Doesn't exist? Add to database
-    User.get(unique_id)
     if not User.get(unique_id):
         User.create(unique_id, dict1[0], dict1[1], users_email, picture)
 
