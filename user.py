@@ -20,7 +20,6 @@ class User(UserMixin):
         return True
 
 
-
     @staticmethod
     def parseJSON(obj):
         users = obj["data"]
@@ -50,6 +49,7 @@ class User(UserMixin):
             "google_id": id_,
             "first_name": first_name,
             "last_name": last_name,
+            'email': email,
             "picture": profile_pic,
         }
         requests.post(USER_URL, json=obj)

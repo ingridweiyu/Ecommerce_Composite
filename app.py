@@ -24,8 +24,8 @@ CORS(app)
 from user import User
 
 # Configuration
-GOOGLE_CLIENT_ID = "270365524910-oe134bpt9ft738904gb5i2n004a1vm0c.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET = "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"
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
 # Flask app setup
@@ -55,7 +55,6 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    print(current_user.is_authenticated)
     if current_user.is_authenticated:
         return (
             "<p>Hello, {}! You're logged in! Email: {}</p>"
@@ -135,7 +134,6 @@ def callback():
         return "User email not available or not verified by Google.", 400
 
 
-
     # Create a user in our db with the information provided
     # by Google
     dict1 = users_name.split(' ')
@@ -147,7 +145,7 @@ def callback():
     # Doesn't exist? Add to database
     User.get(unique_id)
     if not User.get(unique_id):
-        User.create(unique_id, dict1[0],dict1[1], users_email, picture)
+        User.create(unique_id, dict1[0], dict1[1], users_email, picture)
 
 
     # Begin user session by logging the user in
@@ -170,4 +168,4 @@ def get_google_provider_cfg():
 
 
 if __name__ == "__main__":
-    app.run(port=5012)
+    app.run(host="127.0.0.1", port=5012)
