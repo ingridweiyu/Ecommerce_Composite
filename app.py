@@ -127,7 +127,8 @@ def callback():
         unique_id = userinfo_response.json()["sub"]
         users_email = userinfo_response.json()["email"]
         picture = userinfo_response.json()["picture"]
-        users_name = userinfo_response.json()["name"]
+        users_firstname = userinfo_response.json()["given_name"]
+        users_lastname = userinfo_response.json()['family_name']
 
     else:
         return "User email not available or not verified by Google.", 400
@@ -135,9 +136,8 @@ def callback():
 
     # Create a user in our db with the information provided
     # by Google
-    dict1 = users_name.split(' ')
     user = User(
-        id_=unique_id, first_name=dict1[0], last_name=dict1[1], email=users_email, profile_pic=picture
+        id_=unique_id, first_name=users_firstname, last_name=users_lastname, email=users_email, profile_pic=picture
     )
 
 
