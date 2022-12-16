@@ -143,7 +143,7 @@ def callback():
 
     # Doesn't exist? Add to database
     if not User.get(unique_id):
-        User.create(unique_id, dict1[0], dict1[1], users_email, picture)
+        User.create(unique_id, users_firstname, users_lastname, users_email, picture)
 
 
     # Begin user session by logging the user in
