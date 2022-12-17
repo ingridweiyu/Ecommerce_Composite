@@ -13,6 +13,8 @@ from flask_login import (
 )
 from oauthlib.oauth2 import WebApplicationClient
 import requests
+from user import User
+
 
 with open("config.json") as json_file:
     config_dict = json.load(json_file)
@@ -21,10 +23,6 @@ with open("config.json") as json_file:
 #ONLY FOR DEVELOPMENT PURPOSES!!!!
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-app = Flask(__name__)
-CORS(app)
-
-from user import User
 
 # Configuration
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
@@ -37,6 +35,8 @@ GOOGLE_CLIENT_SECRET = "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"
 
 # Flask app setup
 app = Flask(__name__)
+CORS(app)
+
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # User session management setup
@@ -185,7 +185,8 @@ def callback():
         unique_id = userinfo_response.json()["sub"]
         users_email = userinfo_response.json()["email"]
         picture = userinfo_response.json()["picture"]
-        users_name = userinfo_response.json()["name"]
+        users_firstname = userinfo_response.json()["given_name"]
+        users_lastname = userinfo_response.json()['family_name']
 
     else:
         return "User email not available or not verified by Google.", 400
@@ -193,15 +194,14 @@ def callback():
 
     # Create a user in our db with the information provided
     # by Google
-    dict1 = users_name.split(' ')
     user = User(
-        id_=unique_id, first_name=dict1[0], last_name=dict1[1], email=users_email, profile_pic=picture
+        id_=unique_id, first_name=users_firstname, last_name=users_lastname, email=users_email, profile_pic=picture
     )
 
 
     # Doesn't exist? Add to database
     if not User.get(unique_id):
-        User.create(unique_id, dict1[0], dict1[1], users_email, picture)
+        User.create(unique_id, users_firstname, users_lastname, users_email, picture)
 
 
     # Begin user session by logging the user in
