@@ -14,6 +14,10 @@ from flask_login import (
 from oauthlib.oauth2 import WebApplicationClient
 import requests
 
+with open("config.json") as json_file:
+    config_dict = json.load(json_file)
+
+
 #ONLY FOR DEVELOPMENT PURPOSES!!!!
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
@@ -26,6 +30,10 @@ from user import User
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
+
+GOOGLE_CLIENT_ID = "1085225843617-9eu61l8q5goe0spdntpap4q6n88btbbf.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"
+
 
 # Flask app setup
 app = Flask(__name__)
@@ -50,6 +58,56 @@ client = WebApplicationClient(GOOGLE_CLIENT_ID)
 @login_manager.user_loader
 def load_user(user_id):
     return User.get(user_id)
+
+# @app.route("/profile")
+# def profile():
+#     def get_profile(uid):
+#         return requests.get(user_endpoint+uid).json()
+
+#     return None
+
+@app.route("/items/<item_id>")
+def get_items(item_id):
+    item_endpoint = config_dict["item_endpoint"]
+    return requests.get(item_endpoint+item_id).json()
+
+
+@app.route("/get_user_cart")
+def get_user_cart(user_id, cart_id):
+    cart_user_endpoint = config_dict["cart_user_endpoint"]
+
+    return requests.get(cart_user_endpoint).json()
+
+# @app.route("/add_to_cart")
+# def add_user_cart(user_id, cart_id, item_id):
+#     add_cart_endpoint = config_dict["add_cart_creation"]
+
+#     user_id = 'xxx'
+#     cart_id = 'yyy'
+#     item_id = 'zzz'# frontend
+
+#     carts = requests.get(url=user_cart_endpoint)
+#     if user_id in carts:
+#         status_code = add
+#     else:
+#         create cart
+#         status_code = add
+
+#     def add(user_id, cart_id, item_id):
+#         post_param = {
+#             "user_id": user_id,
+#             "cart_id": cart_id,
+#             'item_id': item_id
+#         }
+
+#         post_req = requests.post(url=cart_creation_endpoint, json=post_param)
+#         return post_req.status_code
+#     if status_code == '200':
+#         return 'success'
+#     else:
+#         return 'failed'
+
+
 
 
 @app.route("/")
@@ -166,4 +224,4 @@ def get_google_provider_cfg():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5012)
+    app.run(host="127.0.0.1", port=5012, debug=True)
