@@ -13,8 +13,7 @@ from flask_login import (
 )
 from oauthlib.oauth2 import WebApplicationClient
 import requests
-from user import User
-
+from json2html import *
 
 with open("config.json") as json_file:
     config_dict = json.load(json_file)
@@ -23,6 +22,10 @@ with open("config.json") as json_file:
 #ONLY FOR DEVELOPMENT PURPOSES!!!!
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
+app = Flask(__name__)
+CORS(app)
+
+from user import User
 
 # Configuration
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
@@ -35,8 +38,6 @@ GOOGLE_CLIENT_SECRET = "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"
 
 # Flask app setup
 app = Flask(__name__)
-CORS(app)
-
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # User session management setup
@@ -59,24 +60,141 @@ client = WebApplicationClient(GOOGLE_CLIENT_ID)
 def load_user(user_id):
     return User.get(user_id)
 
-# @app.route("/profile")
-# def profile():
-#     def get_profile(uid):
-#         return requests.get(user_endpoint+uid).json()
+@app.route("/users")
+def get_users_all():
+    offset = request.args.get('offset')
+    limit = request.args.get('limit')
+    all_item_endpoint = config_dict["user_endpoint"]
 
-#     return None
+    if offset is not None:
+        all_item_endpoint += f"?offset={offset}"
+    if limit is not None:
+        all_item_endpoint += f"&limit={limit}"
+    req = requests.get(all_item_endpoint).json()
+    # res = req['data'][0]
+    htmls = [f"<div><p>{x['data']['user_id']}</p><a>{x['data']['first_name']}</a> <a>{x['data']['last_name']}</a></div>" for x in req['data']]
+    html = ''.join(htmls)
+    prev, next = req["links"][1]["href"], req["links"][-1]["href"]
+
+    html += f'<a href="{prev}">previous</a> &nbsp'.replace("/?","?")
+    html += f'<a href="{next}">next</a>'.replace("/?","?")
+    return html
+
+@app.route("/users/<user_id>")
+def get_user(user_id):
+    user_endpoint = config_dict["user_endpoint"]+'/'+str(user_id)
+    return requests.get(user_endpoint).json()
+
+@app.route("/profile/<user_id>/email")
+def get_email(user_id):
+    _endpoint = config_dict["contact_endpoint"]+'/'+str(user_id)+'/email'
+    status_code = requests.get(_endpoint).status_code
+    
+    if status_code==200:
+        return requests.get(_endpoint).json()
+    else:
+        return "no email"
+
+@app.route("/profile/<user_id>/address")
+def get_address(user_id):
+    _endpoint = config_dict["contact_endpoint"]+'/'+str(user_id)+'/address'
+    status_code = requests.get(_endpoint).status_code
+    if status_code==200:
+        return requests.get(_endpoint).json()
+    else:
+        return {}
+
+@app.route("/profile/<user_id>/phone")
+def get_phone(user_id):
+    _endpoint = config_dict["contact_endpoint"]+'/'+str(user_id)+'/phone'
+    status_code = requests.get(_endpoint).status_code
+    if status_code==200:
+        return requests.get(_endpoint).json()
+    else:
+        return {}
+
+def update_profile(url,update_item,change):
+    url = url+'/'+update_item
+    post_param = {
+        update_item: change,
+    } 
+    if_exists = requests.get(url).content
+    print(if_exists,"aaaaaaaaaaaaaaaaaaaaaaaaaa")
+
+    if if_exists != b'Not found':
+        post_req = requests.put(url=url, json=post_param)
+    else:
+        post_req = requests.post(url=url, json=post_param)
+
+    status_code =  post_req.status_code
+    
+    return status_code
+
+@app.route("/profile/<user_id>/update_email")
+def update_email(user_id):
+    email = request.args.get('email')
+    _endpoint = config_dict["contact_endpoint"]+'/'+str(user_id)
+    status_code = update_profile(_endpoint, "email", email)
+    if status_code == 200:
+       return 'success'
+    else:
+        return 'failed'
+
+@app.route("/profile/<user_id>/update_address")
+def update_address(user_id):
+    address = request.args.get('address')
+    _endpoint = config_dict["contact_endpoint"]+'/'+str(user_id)
+    status_code = update_profile(_endpoint,"address",address)
+    if status_code == 200:
+       return 'success'
+    else:
+        return 'failed'
+
+@app.route("/profile/<user_id>/update_phone")
+def update_phone(user_id):
+    phone = request.args.get('phone')
+    _endpoint = config_dict["contact_endpoint"]+'/'+str(user_id)
+    status_code = update_profile(_endpoint, "phone",phone)
+    if status_code == 200:
+       return 'success'
+    else:
+        return 'failed'
 
 @app.route("/items/<item_id>")
-def get_items(item_id):
-    item_endpoint = config_dict["item_endpoint"]
-    return requests.get(item_endpoint+item_id).json()
+def get_item_detail(item_id):
+    item_endpoint = config_dict["item_endpoint"]+'/'+str(item_id)
+    return requests.get(item_endpoint).json()
 
+@app.route("/items")
+def get_items_all():
+    offset = request.args.get('offset')
+    limit = request.args.get('limit')
+    all_item_endpoint = config_dict["item_endpoint"]
 
-@app.route("/get_user_cart")
-def get_user_cart(user_id, cart_id):
-    cart_user_endpoint = config_dict["cart_user_endpoint"]
+    if offset is not None:
+        all_item_endpoint += f"?offset={offset}"
+    if limit is not None:
+        all_item_endpoint += f"&limit={limit}"
+    req = requests.get(all_item_endpoint).json()
+    html = json2html.convert(json = req['data'])
+    # html = ''.join(htmls)
+    prev, next = req["link"][0]["href"], req["link"][-1]["href"]
+    html += f'<a href="{prev}">previous</a> &nbsp'
+    html += f'<a href="{next}">next</a>'
+    return html
+
+@app.route("/get_user_cart") #??????
+def get_user_cart(user_id):
+    cart_user_endpoint = config_dict["cart_endpoint"]
 
     return requests.get(cart_user_endpoint).json()
+
+@app.route("/get_items_in_cart/<cart_id>") #?????
+def get_items_in_cart(cart_id):
+    get_items_in_cart_endpoint = config_dict["cart_endpoint"]+'/'+str(cart_id)
+
+    return requests.get(get_items_in_cart_endpoint).json()
+
 
 # @app.route("/add_to_cart")
 # def add_user_cart(user_id, cart_id, item_id):
@@ -102,7 +220,7 @@ def get_user_cart(user_id, cart_id):
 
 #         post_req = requests.post(url=cart_creation_endpoint, json=post_param)
 #         return post_req.status_code
-#     if status_code == '200':
+#     if status_code == 200:
 #         return 'success'
 #     else:
 #         return 'failed'
@@ -114,11 +232,42 @@ def get_user_cart(user_id, cart_id):
 def index():
     if current_user.is_authenticated:
         return (
-            "<p>Hello, {}! You're logged in! Email: {}</p>"
+            "<a>Hello, {}! You're logged in!</a>"'<a>     &nbsp</a>''<a class="button" href="/logout">Logout</a>'
             "<div><p>Google Profile Picture:</p>"
             '<img src="{}" alt="Google profile pic"></img></div>'
-            '<a class="button" href="/logout">Logout</a>'.format(
-                current_user.name, current_user.email, current_user.profile_pic
+            "<br>"
+            '<div>Profile</div>'
+            '<a class="button" href="/profile/{}/email">Email</a>'
+            '<a> &nbsp</a>'
+            '<a class="button" href="/profile/{}/address">Address</a>'
+            '<a> &nbsp</a>'
+            '<a class="button" href="/profile/{}/phone">Phone</a>'
+            "<br>"
+            """
+            <form action="/profile/{}/update_email">
+                <label for="email">Update your email: </label>
+                <input type="text" id="email" name="email">
+            <input type="submit" value="Submit">
+            </form> 
+            <form action="/profile/{}/update_address">
+                <label for="address">Update your address: </label>
+                <input type="text" id="address" name="address">
+            <input type="submit" value="Submit">
+            </form> 
+            <form action="/profile/{}/update_phone">
+                <label for="phone">Update your phone: </label>
+                <input type="text" id="phone" name="phone">
+            <input type="submit" value="Submit">
+            </form> 
+            """
+            '<a class="button" href="/items">Start Shopping</a>'
+            "<br>"
+            '<a class="button" href="/profile/{}/phone">My Cart(not working now)</a>'
+            
+            .format(
+                current_user.name, current_user.profile_pic,
+                current_user.id,current_user.id,current_user.id, current_user.id,
+                current_user.id, current_user.id,current_user.id
             )
         )
     else:
@@ -185,8 +334,7 @@ def callback():
         unique_id = userinfo_response.json()["sub"]
         users_email = userinfo_response.json()["email"]
         picture = userinfo_response.json()["picture"]
-        users_firstname = userinfo_response.json()["given_name"]
-        users_lastname = userinfo_response.json()['family_name']
+        users_name = userinfo_response.json()["name"]
 
     else:
         return "User email not available or not verified by Google.", 400
@@ -194,14 +342,15 @@ def callback():
 
     # Create a user in our db with the information provided
     # by Google
+    dict1 = users_name.split(' ')
     user = User(
-        id_=unique_id, first_name=users_firstname, last_name=users_lastname, email=users_email, profile_pic=picture
+        id_=unique_id, first_name=dict1[0], last_name=dict1[1], email=users_email, profile_pic=picture
     )
 
 
     # Doesn't exist? Add to database
     if not User.get(unique_id):
-        User.create(unique_id, users_firstname, users_lastname, users_email, picture)
+        User.create(unique_id, dict1[0], dict1[1], users_email, picture)
 
 
     # Begin user session by logging the user in

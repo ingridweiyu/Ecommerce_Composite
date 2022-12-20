@@ -1,2 +1,5 @@
-{"item_endpoint": "https://virtserver.swaggerhub.com/HQ9907_1/Users/1.0.0/items/",
-"cart_creation_endpoint":"https://virtserver.swaggerhub.com/HQ9907_1/Users/1.0.0/carts/"}
+{"item_endpoint": "http://shoppingcart-env.eba-mupnhn22.us-east-1.elasticbeanstalk.com/items",
+"cart_endpoint":"http://shoppingcart-env.eba-mupnhn22.us-east-1.elasticbeanstalk.com/carts",
+"user_endpoint":"http://ec2-3-87-226-6.compute-1.amazonaws.com:8080/users",
+"contact_endpoint":"https://738wowsvq4.execute-api.us-east-1.amazonaws.com/contact"
+}
