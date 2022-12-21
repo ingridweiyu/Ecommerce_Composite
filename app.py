@@ -382,11 +382,11 @@ def index():
             '<img src="{}" alt="Google profile pic"></img></div>'
             "<br>"
             "<div>Profile</div>"
-            '<a class="button" href="/profile/{}/email">Email</a>'
+            '<a class="button" href="/profile/email">Email</a>'
             "<a> &nbsp</a>"
-            '<a class="button" href="/profile/{}/address">Address</a>'
+            '<a class="button" href="/profile/address">Address</a>'
             "<a> &nbsp</a>"
-            '<a class="button" href="/profile/{}/phone">Phone</a>'
+            '<a class="button" href="/profile/phone">Phone</a>'
             "<br>"
             """
             <form action="/profile/update_email">
@@ -406,17 +406,9 @@ def index():
             </form> 
             """
             "<br>"
-            '<a class="button" href="/get_user_cart/{}">Start Shopping</a>'.format(
+            '<a class="button" href="/get_user_cart">Start Shopping</a>'.format(
                 current_user.name,
                 current_user.profile_pic,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-                current_user.id,
             )
         )
     else:
