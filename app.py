@@ -118,8 +118,23 @@ def update_profile(url, update_item, change):
     return status_code
 
 
-@app.route("/profile/<user_id>/update_address")
-def update_address(user_id):
+@app.route("/profile/update_email")
+@login_required
+def update_email():
+    user_id = current_user.get_id()
+    email = request.args.get("email")
+    _endpoint = config_dict["contact_endpoint"] + "/" + str(user_id)
+    status_code = update_profile(_endpoint, "email", email)
+    if status_code == 200:
+        return "success"
+    else:
+        return "failed"
+
+
+@app.route("/profile/update_address")
+@login_required
+def update_address():
+    user_id = current_user.get_id()
     address = request.args.get("address")
     _endpoint = config_dict["contact_endpoint"] + "/" + str(user_id)
     status_code = update_profile(_endpoint, "address", address)
@@ -129,8 +144,10 @@ def update_address(user_id):
         return "failed"
 
 
-@app.route("/profile/<user_id>/update_phone")
-def update_phone(user_id):
+@app.route("/profile/update_phone")
+@login_required
+def update_phone():
+    user_id = current_user.get_id()
     phone = request.args.get("phone")
     _endpoint = config_dict["contact_endpoint"] + "/" + str(user_id)
     status_code = update_profile(_endpoint, "phone", phone)
@@ -361,17 +378,17 @@ def index():
             '<a class="button" href="/profile/{}/phone">Phone</a>'
             "<br>"
             """
-            <form action="/profile/{}/update_email">
+            <form action="/profile/update_email">
                 <label for="email">Update your email: </label>
                 <input type="text" id="email" name="email">
             <input type="submit" value="Submit">
             </form> 
-            <form action="/profile/{}/update_address">
+            <form action="/profile/update_address">
                 <label for="address">Update your address: </label>
                 <input type="text" id="address" name="address">
             <input type="submit" value="Submit">
             </form> 
-            <form action="/profile/{}/update_phone">
+            <form action="/profile/update_phone">
                 <label for="phone">Update your phone: </label>
                 <input type="text" id="phone" name="phone">
             <input type="submit" value="Submit">
@@ -495,4 +512,4 @@ def get_google_provider_cfg():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5012, debug=True)
+    app.run(host="127.0.0.1", port=5012)
