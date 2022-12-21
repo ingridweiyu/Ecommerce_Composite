@@ -18,6 +18,7 @@ from json2html import *
 with open("config.json") as json_file:
     config_dict = json.load(json_file)
 
+import numpy as np
 
 #ONLY FOR DEVELOPMENT PURPOSES!!!!
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -160,13 +161,13 @@ def update_phone(user_id):
     else:
         return 'failed'
 
-@app.route("/items/<item_id>")
-def get_item_detail(item_id):
-    item_endpoint = config_dict["item_endpoint"]+'/'+str(item_id)
-    return requests.get(item_endpoint).json()
+# @app.route("/items/<item_id>")
+# def get_item_detail(item_id):
+#     item_endpoint = config_dict["item_endpoint"]+'/'+str(item_id)
+#     return requests.get(item_endpoint).json()
 
-@app.route("/items")
-def get_items_all():
+@app.route("/shopping/<cart_id>")
+def get_items_all(cart_id):
     offset = request.args.get('offset')
     limit = request.args.get('limit')
     all_item_endpoint = config_dict["item_endpoint"]
@@ -176,24 +177,58 @@ def get_items_all():
     if limit is not None:
         all_item_endpoint += f"&limit={limit}"
     req = requests.get(all_item_endpoint).json()
+    
+    for i, item in enumerate(req['data']):
+        item_id = item['item_id']
+
+        item['add'] = f"<a href='/add_to_cart/{cart_id}/{item_id}'>add_to_cart</a>"
+        req['data'][i] = item
     html = json2html.convert(json = req['data'])
-    # html = ''.join(htmls)
+    headers = '<tr>' + ''.join([f'<th>{val}</th>' for val in req['data'][0].keys()]) + '</tr>'
+    thead = f'<thead>{headers}</thead>'
+    tbody = ['<tr>' + ''.join([f'<td>{val}</td>' for val in row.values()]) + '</tr>' for row in req['data']]
+    tbody = '\n'.join(tbody)
+    tbody = f'<tbody>{tbody}</tbody>'
+    html = f"<table border=1>{thead}{tbody}</table>"
+
     prev, next = req["link"][0]["href"], req["link"][-1]["href"]
     html += f'<a href="{prev}">previous</a> &nbsp'
     html += f'<a href="{next}">next</a>'
     return html
 
-@app.route("/get_user_cart") #??????
+@app.route("/create_cart/<user_id>")
+def create_cart(user_id):
+    _endpoint = config_dict["cart_endpoint"]
+    generated_cart_id = int(round(np.random.random(),5)*10000)
+    res = requests.post(_endpoint,json={'user_id': user_id, 'cart_id':generated_cart_id})
+    while res.status_code != 200:
+        generated_cart_id = int(round(np.random.random(),5)*10000)
+        res = requests.post(_endpoint,json={'user_id': user_id, 'cart_id':generated_cart_id})
+    html = "<a href = '/shopping/{}'>continue shopping</a>".format(generated_cart_id)
+    # return {"user_id":user_id,"cart_id":generated_cart_id}
+    return html
+
+@app.route("/get_user_cart/<user_id>")
 def get_user_cart(user_id):
-    cart_user_endpoint = config_dict["cart_endpoint"]
+    _endpoint = config_dict["cart_endpoint"]+"/users/{}".format(user_id)
+    print(_endpoint)
+    res = requests.get(_endpoint)
+    html = '<a class="button" href="/create_cart/{}">Start New Cart</a>'.format(user_id)###todo
+    if res.status_code == 200:
+        cart_ls = [x.get("cart_id") for x in res.json()]
+        for cart_id in cart_ls:
+            html += '<br><a class="button" href="/get_items_in_cart/{}">Cart {}</a>'.format(cart_id,cart_id)
+    return html
 
-    return requests.get(cart_user_endpoint).json()
 
-@app.route("/get_items_in_cart/<cart_id>") #?????
+@app.route("/get_items_in_cart/<cart_id>") 
 def get_items_in_cart(cart_id):
-    get_items_in_cart_endpoint = config_dict["cart_endpoint"]+'/'+str(cart_id)
-
-    return requests.get(get_items_in_cart_endpoint).json()
+    _endpoint = config_dict["cart_endpoint"]+"/{}/items".format(cart_id)
+    res = requests.get(_endpoint)
+    if res.status_code == 200:
+        return json2html.convert(res.json())
+    else:
+        return {}
 
 
 # @app.route("/add_to_cart")
@@ -260,14 +295,13 @@ def index():
             <input type="submit" value="Submit">
             </form> 
             """
-            '<a class="button" href="/items">Start Shopping</a>'
             "<br>"
-            '<a class="button" href="/profile/{}/phone">My Cart(not working now)</a>'
+            '<a class="button" href="/get_user_cart/{}">Start Shopping</a>'
             
             .format(
                 current_user.name, current_user.profile_pic,
                 current_user.id,current_user.id,current_user.id, current_user.id,
-                current_user.id, current_user.id,current_user.id
+                current_user.id, current_user.id,current_user.id,current_user.id
             )
         )
     else:
