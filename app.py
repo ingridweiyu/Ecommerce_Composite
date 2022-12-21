@@ -1,4 +1,5 @@
 # Python standard libraries
+import functools
 import json
 import os
 from flask_cors import CORS
@@ -46,6 +47,14 @@ app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+def login_required(func):
+    @functools.wraps(func)
+    def secure_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for("login", next=request.url))
+        return func(*args, **kwargs)
+
+    return secure_function
 
 @login_manager.unauthorized_handler
 def unauthorized():
@@ -61,8 +70,12 @@ client = WebApplicationClient(GOOGLE_CLIENT_ID)
 def load_user(user_id):
     return User.get(user_id)
 
+
+
 @app.route("/users")
+@login_required
 def get_users_all():
+
     offset = request.args.get('offset')
     limit = request.args.get('limit')
     all_item_endpoint = config_dict["user_endpoint"]
@@ -375,6 +388,7 @@ def login():
         redirect_uri=request.base_url + "/callback",
         scope=["openid", "email", "profile"]
     )
+
     return redirect(request_uri)
 
 
