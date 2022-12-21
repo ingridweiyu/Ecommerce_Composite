@@ -67,44 +67,12 @@ def load_user(user_id):
     return User.get(user_id)
 
 
-@app.route("/users")
-@login_required
-def get_users_all():
-    offset = request.args.get("offset")
-    limit = request.args.get("limit")
-    all_item_endpoint = config_dict["user_endpoint"]
-
-    if offset is not None:
-        all_item_endpoint += f"?offset={offset}"
-    if limit is not None:
-        all_item_endpoint += f"&limit={limit}"
-    req = requests.get(all_item_endpoint).json()
-    # res = req['data'][0]
-    htmls = [
-        f"<div><p>{x['data']['user_id']}</p><a>{x['data']['first_name']}</a> <a>{x['data']['last_name']}</a></div>"
-        for x in req["data"]
-    ]
-    html = "".join(htmls)
-    prev, next = req["links"][1]["href"], req["links"][-1]["href"]
-
-    html += f'<a href="{prev}">previous</a> &nbsp'.replace("/?", "?")
-    html += f'<a href="{next}">next</a>'.replace("/?", "?")
-    return html
-
-
-@app.route("/users/<user_id>")
-@login_required
-def get_user(user_id):
-    user_endpoint = config_dict["user_endpoint"] + "/" + str(user_id)
-    return requests.get(user_endpoint).json()
-
-
 def microservice_endpoint(name, user_id, appendix=""):
     return config_dict[f"{name}_endpoint"] + "/" + str(user_id) + appendix
 
 
-def get_from_microservice(name, user_id, appendix=""):
-    endpoint = microservice_endpoint(name, user_id, appendix)
+def get_from_microservice(microservice_name, user_id, appendix=""):
+    endpoint = microservice_endpoint(microservice_name, user_id, appendix)
     print(appendix, user_id, endpoint)
     return requests.get(endpoint).json()
 
@@ -121,7 +89,7 @@ def get_contact(user_id):
     )
 
 
-@app.route("/profile", methods=["POST", "GET"])
+@app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
     user_id = current_user.get_id()
@@ -132,37 +100,6 @@ def profile():
         return user_obj
     elif request.method == "POST":
         print(request.json)
-
-
-@app.route("/profile/<user_id>/email")
-def get_email(user_id):
-    _endpoint = config_dict["contact_endpoint"] + "/" + str(user_id) + "/email"
-    status_code = requests.get(_endpoint).status_code
-
-    if status_code == 200:
-        return requests.get(_endpoint).json()
-    else:
-        return "no email"
-
-
-@app.route("/profile/<user_id>/address")
-def get_address(user_id):
-    _endpoint = config_dict["contact_endpoint"] + "/" + str(user_id) + "/address"
-    status_code = requests.get(_endpoint).status_code
-    if status_code == 200:
-        return requests.get(_endpoint).json()
-    else:
-        return {}
-
-
-@app.route("/profile/<user_id>/phone")
-def get_phone(user_id):
-    _endpoint = config_dict["contact_endpoint"] + "/" + str(user_id) + "/phone"
-    status_code = requests.get(_endpoint).status_code
-    if status_code == 200:
-        return requests.get(_endpoint).json()
-    else:
-        return {}
 
 
 def update_profile(url, update_item, change):
@@ -179,17 +116,6 @@ def update_profile(url, update_item, change):
     status_code = post_req.status_code
 
     return status_code
-
-
-@app.route("/profile/<user_id>/update_email")
-def update_email(user_id):
-    email = request.args.get("email")
-    _endpoint = config_dict["contact_endpoint"] + "/" + str(user_id)
-    status_code = update_profile(_endpoint, "email", email)
-    if status_code == 200:
-        return "success"
-    else:
-        return "failed"
 
 
 @app.route("/profile/<user_id>/update_address")
@@ -212,12 +138,6 @@ def update_phone(user_id):
         return "success"
     else:
         return "failed"
-
-
-# @app.route("/items/<item_id>")
-# def get_item_detail(item_id):
-#     item_endpoint = config_dict["item_endpoint"]+'/'+str(item_id)
-#     return requests.get(item_endpoint).json()
 
 
 @app.route("/shopping/<cart_id>")
