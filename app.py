@@ -158,6 +158,7 @@ def update_phone():
 
 
 @app.route("/shopping/<cart_id>")
+@login_required
 def get_items_all(cart_id):
     offset = request.args.get("offset")
     limit = request.args.get("limit")
@@ -196,6 +197,7 @@ def get_items_all(cart_id):
 
 
 @app.route("/create_cart/<user_id>")
+@login_required
 def create_cart(user_id):
     _endpoint = config_dict["cart_endpoint"]
     generated_cart_id = int(round(np.random.random(), 5) * 10000)
@@ -213,6 +215,7 @@ def create_cart(user_id):
 
 
 @app.route("/get_user_cart/<user_id>")
+@login_required
 def get_user_cart(user_id):
     _endpoint = config_dict["cart_endpoint"] + "/users/{}".format(user_id)
     res = requests.get(_endpoint)
@@ -232,6 +235,7 @@ def get_user_cart(user_id):
 
 
 @app.route("/delete_cart/<user_id>/<cart_id>")
+@login_required
 def delete_cart(user_id, cart_id):
     _endpoint = config_dict["cart_endpoint"]
     res = requests.delete(_endpoint, json={"cart_id": cart_id, "user_id": user_id})
@@ -242,6 +246,7 @@ def delete_cart(user_id, cart_id):
 
 
 @app.route("/delete_items_in_cart/<cart_id>/<item_id>")
+@login_required
 def delete_items_in_cart(cart_id, item_id):
     _endpoint = config_dict["cart_endpoint"] + "/" + str(cart_id)
     res = requests.delete(_endpoint, json={"item_id": item_id})
@@ -252,6 +257,7 @@ def delete_items_in_cart(cart_id, item_id):
 
 
 @app.route("/change_item_count_in_cart/<cart_id>/<item_id>")
+@login_required
 def change_item_count_in_cart(cart_id, item_id):
     new_count = request.args.get("changeItem")
 
@@ -275,6 +281,7 @@ def change_item_count_in_cart(cart_id, item_id):
 
 
 @app.route("/get_items_in_cart/<cart_id>")
+@login_required
 def get_items_in_cart(cart_id):
     _endpoint = config_dict["cart_endpoint"] + "/{}/items".format(cart_id)
     res = requests.get(_endpoint)
@@ -316,6 +323,7 @@ def get_items_in_cart(cart_id):
 
 
 @app.route("/checkout/<cart_id>")
+@login_required
 def checkout(cart_id):
     # user_id =
     html = "Congrats! Your order is sumbitted."
@@ -327,6 +335,7 @@ def checkout(cart_id):
 
 
 @app.route("/add_to_cart/<cart_id>/<item_id>")
+@login_required
 def add_to_cart(cart_id, item_id):
     _endpoint = config_dict["cart_endpoint"] + "/{}/items".format(cart_id)
     res = requests.get(_endpoint)
