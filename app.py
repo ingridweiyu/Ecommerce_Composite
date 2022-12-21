@@ -14,7 +14,7 @@ from flask_login import (
 )
 from oauthlib.oauth2 import WebApplicationClient
 import requests
-from json2html import *
+from middleware import login_required
 
 with open("config.json") as json_file:
     config_dict = json.load(json_file)
@@ -47,14 +47,6 @@ app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-def login_required(func):
-    @functools.wraps(func)
-    def secure_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            return redirect(url_for("login", next=request.url))
-        return func(*args, **kwargs)
-
-    return secure_function
 
 @login_manager.unauthorized_handler
 def unauthorized():
@@ -95,6 +87,7 @@ def get_users_all():
     return html
 
 @app.route("/users/<user_id>")
+@login_required
 def get_user(user_id):
     user_endpoint = config_dict["user_endpoint"]+'/'+str(user_id)
     return requests.get(user_endpoint).json()
