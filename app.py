@@ -214,9 +214,10 @@ def create_cart(user_id):
     return html
 
 
-@app.route("/get_user_cart/<user_id>")
+@app.route("/get_user_cart")
 @login_required
-def get_user_cart(user_id):
+def get_user_cart():
+    user_id = current_user.get_id()
     _endpoint = config_dict["cart_endpoint"] + "/users/{}".format(user_id)
     res = requests.get(_endpoint)
     html = '<a class="button" href="/create_cart/{}">Start New Cart</a>'.format(
@@ -319,7 +320,8 @@ def get_items_in_cart(cart_id):
         html += f"<a href='/checkout/{cart_id}'>Checkout</a>"
         return html
     else:
-        return {}
+        html = "<h1>This cart is empty</h1>"
+        return html
 
 
 @app.route("/checkout/<cart_id>")
