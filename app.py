@@ -120,8 +120,6 @@ def update_profile(url,update_item,change):
         update_item: change,
     } 
     if_exists = requests.get(url).content
-    print(if_exists,"aaaaaaaaaaaaaaaaaaaaaaaaaa")
-
     if if_exists != b'Not found':
         post_req = requests.put(url=url, json=post_param)
     else:
@@ -183,13 +181,13 @@ def get_items_all(cart_id):
 
         item['add'] = f"<a href='/add_to_cart/{cart_id}/{item_id}'>add_to_cart</a>"
         req['data'][i] = item
-    html = json2html.convert(json = req['data'])
+    html = '<a class="button" href="/get_items_in_cart/{}">Current Cart</a>'.format(cart_id)
     headers = '<tr>' + ''.join([f'<th>{val}</th>' for val in req['data'][0].keys()]) + '</tr>'
     thead = f'<thead>{headers}</thead>'
     tbody = ['<tr>' + ''.join([f'<td>{val}</td>' for val in row.values()]) + '</tr>' for row in req['data']]
     tbody = '\n'.join(tbody)
     tbody = f'<tbody>{tbody}</tbody>'
-    html = f"<table border=1>{thead}{tbody}</table>"
+    html += f"<table border=1>{thead}{tbody}</table>"
 
     prev, next = req["link"][0]["href"], req["link"][-1]["href"]
     html += f'<a href="{prev}">previous</a> &nbsp'
@@ -211,13 +209,47 @@ def create_cart(user_id):
 @app.route("/get_user_cart/<user_id>")
 def get_user_cart(user_id):
     _endpoint = config_dict["cart_endpoint"]+"/users/{}".format(user_id)
-    print(_endpoint)
     res = requests.get(_endpoint)
     html = '<a class="button" href="/create_cart/{}">Start New Cart</a>'.format(user_id)###todo
     if res.status_code == 200:
         cart_ls = [x.get("cart_id") for x in res.json()]
         for cart_id in cart_ls:
-            html += '<br><a class="button" href="/get_items_in_cart/{}">Cart {}</a>'.format(cart_id,cart_id)
+            html += '<br><br><a class="button" href="/get_items_in_cart/{}">Cart {}</a>'.format(cart_id,cart_id)
+            html += '     &nbsp<a class="button" href="/delete_cart/{}/{}"> Delete</a>'.format(user_id,cart_id)
+    return html
+
+@app.route("/delete_cart/<user_id>/<cart_id>")
+def delete_cart(user_id, cart_id):
+    _endpoint = config_dict["cart_endpoint"]
+    res = requests.delete(_endpoint,  json={'cart_id': cart_id, 'user_id':user_id})
+    if res.status_code == 200:
+        return "Successfully Deleted Cart"
+    else:
+        return "Failed to Delete Cart"
+
+@app.route("/delete_items_in_cart/<cart_id>/<item_id>")
+def delete_items_in_cart(cart_id,item_id):
+    _endpoint = config_dict["cart_endpoint"]+'/'+str(cart_id)
+    res = requests.delete(_endpoint,  json={'item_id':item_id})
+    if res.status_code == 200:
+        return "Successfully Deleted Item"
+    else:
+        return "Failed to Delete Item"
+
+@app.route("/change_item_count_in_cart/<cart_id>/<item_id>")
+def change_item_count_in_cart(cart_id,item_id):
+    new_count = request.args.get('changeItem')
+
+    res = requests.put(config_dict["cart_endpoint"]+"/{}".format(cart_id),  
+    json={'item_id': item_id, 'count':new_count})
+    if res.status_code == 200:
+        html = "Successfully Updated Item Count"
+    else:
+        html =  "Failed to Update Count"
+    html += "<br><br>"
+    html += '<a class="button" href="/shopping/{}">Continue Shopping</a>'.format(cart_id)
+    html += "<br><br>"
+    html += '<a class="button" href="/get_items_in_cart/{}">My Current Cart</a>'.format(cart_id)
     return html
 
 
@@ -226,42 +258,61 @@ def get_items_in_cart(cart_id):
     _endpoint = config_dict["cart_endpoint"]+"/{}/items".format(cart_id)
     res = requests.get(_endpoint)
     if res.status_code == 200:
-        return json2html.convert(res.json())
+        html = ''
+        # return json2html.convert(res.json())
+        req = res.json()
+        # return str(req)
+        for i, item in enumerate(req):
+            item_id = item['item_id']
+            item['change count'] = f"""
+            <form action="/change_item_count_in_cart/{cart_id}/{item_id}">
+                <label for="changeItem"></label>
+                <input type="text", size="1",id="changeItem-{cart_id}-{item_id}" name="changeItem">
+            <input type="submit" value="Update">
+            </form> 
+            """
+            item['remove'] = f"<a href='/delete_items_in_cart/{cart_id}/{item_id}'>Remove</a>"
+            req[i] = item
+        headers = '<tr>' + ''.join([f'<th>{val}</th>' for val in req[0].keys()]) + '</tr>'
+        thead = f'<thead>{headers}</thead>'
+        tbody = ['<tr>' + ''.join([f'<td>{val}</td>' for val in row.values()]) + '</tr>' for row in req]
+        tbody = '\n'.join(tbody)
+        tbody = f'<tbody>{tbody}</tbody>'
+        html += f"<table border=1>{thead}{tbody}</table>"
+        html += f"<a href='/checkout/{cart_id}'>Checkout</a>"
+        return html
     else:
         return {}
 
+@app.route("/checkout/<cart_id>")
+def checkout(cart_id):
+    # user_id = 
+    html = 'Congrats! Your order is sumbitted.'
+    html += "<br><br>"
+    html += '<a href="/">Return to Home</a>'
+    # html += "<br><br>"
+    # html += '<a class="button" href="/get_user_cart/{}">Start Shopping</a>'.format(current_user.id)
+    return html
 
-# @app.route("/add_to_cart")
-# def add_user_cart(user_id, cart_id, item_id):
-#     add_cart_endpoint = config_dict["add_cart_creation"]
+@app.route("/add_to_cart/<cart_id>/<item_id>")
+def add_to_cart(cart_id,item_id):
+    _endpoint = config_dict["cart_endpoint"]+"/{}/items".format(cart_id)
+    res = requests.get(_endpoint)
+    if res.status_code == 200:
+        item_ls = [x['item_id'] for x in res.json()]
+        if item_id in item_ls:
+            current_count = res.json()[item_ls.index(item_id)]['count']
+            requests.put(config_dict["cart_endpoint"]+"/{}".format(cart_id),  json={'item_id': item_id, 'count':current_count+1})
+        else:
+            requests.post(config_dict["cart_endpoint"]+"/{}".format(cart_id),  json={'item_id': item_id, 'count':1})
+    else:
+        requests.post(config_dict["cart_endpoint"]+"/{}".format(cart_id),  json={'item_id': item_id, 'count':1})
+    html = "Successfully Added <br><br><br>"
+    html += '<a class="button" href="/shopping/{}">Continue Shopping</a>'.format(cart_id)
+    html += "<br><br>"
+    html += '<a class="button" href="/get_items_in_cart/{}">My Current Cart</a>'.format(cart_id)
 
-#     user_id = 'xxx'
-#     cart_id = 'yyy'
-#     item_id = 'zzz'# frontend
-
-#     carts = requests.get(url=user_cart_endpoint)
-#     if user_id in carts:
-#         status_code = add
-#     else:
-#         create cart
-#         status_code = add
-
-#     def add(user_id, cart_id, item_id):
-#         post_param = {
-#             "user_id": user_id,
-#             "cart_id": cart_id,
-#             'item_id': item_id
-#         }
-
-#         post_req = requests.post(url=cart_creation_endpoint, json=post_param)
-#         return post_req.status_code
-#     if status_code == 200:
-#         return 'success'
-#     else:
-#         return 'failed'
-
-
-
+    return html
 
 @app.route("/")
 def index():
