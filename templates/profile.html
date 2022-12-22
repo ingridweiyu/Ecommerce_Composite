@@ -5,9 +5,22 @@
     <title>Profile</title>
 </head>
 <body>
+
+<h3>Basic Info</h3>
     <div>
         <p>First Name: {{ user_obj.data.first_name }}</p>
+        <p>Last Name: {{ user_obj.data.last_name }}</p>
+        <p>User Id: {{ user_obj.data.user_id }}</p>
+        <p>Email: {{ user_obj.data.email }}</p>
+        <p>Phone: {{ user_obj.data.phone }}</p>
+        <p>Address: {{ user_obj.data.address }}</p>
     </div>
+<br>
+<br>
 
+<h3>Links</h3>
+    {% for l in user_obj.links %}
+        <p>href: {{ l.href }} rel: {{ l.rel }}</p>
+    {% endfor %}
 </body>
 </html>
