@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Carts</title>
+</head>
+<body>
+
+<a class="button" href="/create_cart">Start New Cart</a>
+<br>
+<br>
+
+{% if data.status_code == 200 %}
+    {% for cart_id in data.cart_ls %}
+        <a class="button" href="/get_items_in_cart/{{ cart_id }}">Cart {{ cart_id }}</a>
+        <a class="button" href="/delete_cart/{{ cart_id }}"> Delete</a>
+        <br>
+    {% endfor %}
+{% endif %}
+
+</body>
+</html>

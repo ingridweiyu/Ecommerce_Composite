@@ -157,6 +157,7 @@ def update_phone():
 
 
 @app.route("/shopping/<cart_id>")
+@login_required
 def get_items_all(cart_id):
     offset = request.args.get("offset")
     limit = request.args.get("limit")
@@ -194,8 +195,10 @@ def get_items_all(cart_id):
     return html
 
 
-@app.route("/create_cart/<user_id>")
-def create_cart(user_id):
+@app.route("/create_cart")
+@login_required
+def create_cart():
+    user_id = current_user.get_id()
     _endpoint = config_dict["cart_endpoint"]
     generated_cart_id = int(round(np.random.random(), 5) * 10000)
     res = requests.post(
@@ -211,28 +214,25 @@ def create_cart(user_id):
     return html
 
 
-@app.route("/get_user_cart")
+@app.route("/get_carts")
+@login_required
 def get_user_cart():
     user_id = current_user.get_id()
     _endpoint = config_dict["cart_endpoint"] + "/users/{}".format(user_id)
     res = requests.get(_endpoint)
-    html = '<a class="button" href="/create_cart/{}">Start New Cart</a>'.format(
-        user_id
-    )  ###todo
+
     if res.status_code == 200:
         cart_ls = [x.get("cart_id") for x in res.json()]
-        for cart_id in cart_ls:
-            html += '<br><br><a class="button" href="/get_items_in_cart/{}">Cart {}</a>'.format(
-                cart_id, cart_id
-            )
-            html += '     &nbsp<a class="button" href="/delete_cart/{}/{}"> Delete</a>'.format(
-                user_id, cart_id
-            )
-    return html
+        data = {"status_code": res.status_code, "cart_ls": cart_ls}
+        context = dict(data=data)
+
+    return render_template("carts.html", **context)
 
 
-@app.route("/delete_cart/<user_id>/<cart_id>")
-def delete_cart(user_id, cart_id):
+@app.route("/delete_cart/<cart_id>")
+@login_required
+def delete_cart(cart_id):
+    user_id = current_user.get_id()
     _endpoint = config_dict["cart_endpoint"]
     res = requests.delete(_endpoint, json={"cart_id": cart_id, "user_id": user_id})
     if res.status_code == 200:
@@ -242,6 +242,7 @@ def delete_cart(user_id, cart_id):
 
 
 @app.route("/delete_items_in_cart/<cart_id>/<item_id>")
+@login_required
 def delete_items_in_cart(cart_id, item_id):
     _endpoint = config_dict["cart_endpoint"] + "/" + str(cart_id)
     res = requests.delete(_endpoint, json={"item_id": item_id})
@@ -252,6 +253,7 @@ def delete_items_in_cart(cart_id, item_id):
 
 
 @app.route("/change_item_count_in_cart/<cart_id>/<item_id>")
+@login_required
 def change_item_count_in_cart(cart_id, item_id):
     new_count = request.args.get("changeItem")
 
@@ -275,6 +277,7 @@ def change_item_count_in_cart(cart_id, item_id):
 
 
 @app.route("/get_items_in_cart/<cart_id>")
+@login_required
 def get_items_in_cart(cart_id):
     _endpoint = config_dict["cart_endpoint"] + "/{}/items".format(cart_id)
     res = requests.get(_endpoint)
@@ -316,6 +319,7 @@ def get_items_in_cart(cart_id):
 
 
 @app.route("/checkout/<cart_id>")
+@login_required
 def checkout(cart_id):
     # user_id =
     html = "Congrats! Your order is sumbitted."
@@ -327,6 +331,7 @@ def checkout(cart_id):
 
 
 @app.route("/add_to_cart/<cart_id>/<item_id>")
+@login_required
 def add_to_cart(cart_id, item_id):
     _endpoint = config_dict["cart_endpoint"] + "/{}/items".format(cart_id)
     res = requests.get(_endpoint)
