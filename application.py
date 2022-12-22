@@ -217,10 +217,16 @@ def get_items_all(cart_id):
         all_item_endpoint += f"&limit={limit}"
     req = requests.get(all_item_endpoint).json()
 
+
+    data = []
+
     for i, item in enumerate(req["data"]):
+
+
         item_id = item["item_id"]
 
-        item["add"] = f"<a href='/add_to_cart/{cart_id}/{item_id}'>add_to_cart</a>"
+        item["add"] = f"/add_to_cart/{cart_id}/{item_id}"
+        data.append(item)
         req["data"][i] = item
     html = '<a class="button" href="/get_items_in_cart/{}">Current Cart</a>'.format(
         cart_id
@@ -241,9 +247,14 @@ def get_items_all(cart_id):
     prev = config_dict['eb_endpoint'] + prev
     next = config_dict['eb_endpoint'] + next
 
+
     html += f'<a href="{prev}">previous</a> &nbsp'
     html += f'<a href="{next}">next</a>'
-    return html
+
+
+    context = dict(data=data, prev=prev, next=next)
+    return render_template("shopping.html", **context)
+
 
 
 @application.route("/add_to_cart/<cart_id>/<item_id>")
