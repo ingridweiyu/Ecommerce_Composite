@@ -91,7 +91,6 @@ def profile():
         user_obj = get_user(user_id)
         contact_obj = get_contact(user_id)
         user_obj["data"] |= contact_obj
-        print(user_obj)
 
         context = dict(user_obj=user_obj)
         return render_template("profile.html", **context)
