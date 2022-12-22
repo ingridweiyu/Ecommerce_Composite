@@ -1,5 +1,5 @@
-{"item_endpoint": "https://738wowsvq4.execute-api.us-east-1.amazonaws.com/items",
-"cart_endpoint":"https://738wowsvq4.execute-api.us-east-1.amazonaws.com/carts",
-"user_endpoint":"https://738wowsvq4.execute-api.us-east-1.amazonaws.com/users",
-"contact_endpoint":"https://738wowsvq4.execute-api.us-east-1.amazonaws.com/contact"
+{"item_endpoint": "http://shoppingcart-env.eba-mupnhn22.us-east-1.elasticbeanstalk.com/items",
+"cart_endpoint": "http://shoppingcart-env.eba-mupnhn22.us-east-1.elasticbeanstalk.com/carts",
+"user_endpoint": "ec2-3-87-226-6.compute-1.amazonaws.com:8080/users",
+"contact_endpoint": "3.88.66.19:5011/contact"
 }
