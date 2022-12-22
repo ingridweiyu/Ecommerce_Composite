@@ -87,7 +87,10 @@ def get_contact(user_id):
 @login_required
 def profile():
     user_id = current_user.get_id()
+    ##DEBUG USE
+    print("Hello")
     if request.method == "GET":
+
         user_obj = get_user(user_id)
         contact_obj = get_contact(user_id)
         user_obj["data"] |= contact_obj
