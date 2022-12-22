@@ -40,6 +40,7 @@ GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configura
 application = Flask(__name__)
 application.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
+CORS(application)
 # User session management setup
 # https://flask-login.readthedocs.io/en/latest
 login_manager = LoginManager()
