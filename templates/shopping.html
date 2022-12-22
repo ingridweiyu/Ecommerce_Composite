@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shopping</title>
+</head>
+<body>
+
+    <h1>Start shopping now</h1>
+
+
+    {% for l in data %}
+        <span>Item_id: {{ l.item_id }} Item_name: {{ l.item_name }} Description: {{ l.description }}</span>
+        <a href='{{ l.add }}'>add_to_cart</a>
+
+        <br>
+    {% endfor %}
+
+    <a href="{{ prev }}">previous</a>
+    <a href="{{ next }}">next</a>
+
+</body>
+</html>
