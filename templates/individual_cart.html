@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Individual Cart</title>
+</head>
+<body>
+
+{% if status_code == 200 %}
+    <table border="1">
+        <tr>
+            <th>Item Id</th>
+            <th>Item Name</th>
+            <th>Count</th>
+            <th>Change Count</th>
+            <th>Remove</th>
+        </tr>
+    {% for item in data %}
+        <tr>
+            <th>{{ item.item_id }}</th>
+            <th>{{ item.item_name }}</th>
+            <th>{{ item.count }}</th>
+            <th>
+                <form action="/change_item_count_in_cart/{{ cart_id }}/{{ item.item_id }}">
+                    <label for="changeItem"></label>
+                    <input type="text" size="1" id="changeItem-{{ cart_id }}-{{ item.item_id }}" name="changeItem">
+                    <input type="submit" value="Update">
+                </form>
+            </th>
+            <th><a href='/delete_items_in_cart/{{ cart_id }}/{{ item.item_id }}'>Remove</a></th>
+        </tr>
+    {% endfor %}
+    </table>
+    <a href='/checkout/{cart_id}'>Checkout</a>
+{% endif %}
+
+{% if status_code != 200 %}
+    <p>Status Code: {{ status_code }}</p>
+{% endif %}
+
+</body>
+</html>

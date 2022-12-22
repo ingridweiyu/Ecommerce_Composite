@@ -18,5 +18,9 @@
     {% endfor %}
 {% endif %}
 
+{% if data.status_code != 200 %}
+    <p>NOT FOUND</p>
+{% endif %}
+
 </body>
 </html>

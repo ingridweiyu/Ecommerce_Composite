@@ -166,6 +166,10 @@ def get_user_cart():
         data = {"status_code": res.status_code, "cart_ls": cart_ls}
         context = dict(data=data)
 
+    else:
+        data = {"status_code": res.status_code}
+        context = dict(data=data)
+
     return render_template("carts.html", **context)
 
 
@@ -212,8 +216,6 @@ def get_items_all(cart_id):
     if limit is not None:
         all_item_endpoint += f"&limit={limit}"
     req = requests.get(all_item_endpoint).json()
-
-    print(req)
 
     for i, item in enumerate(req["data"]):
         item_id = item["item_id"]
@@ -279,15 +281,19 @@ def add_to_cart(cart_id, item_id):
     return html
 
 
-@application.route("/delete_items_in_cart/<cart_id>/<item_id>")
+@application.route("/get_items_in_cart/<cart_id>")
 @login_required
-def delete_items_in_cart(cart_id, item_id):
-    _endpoint = config_dict["cart_endpoint"] + "/" + str(cart_id)
-    res = requests.delete(_endpoint, json={"item_id": item_id})
+def get_items_in_cart(cart_id):
+    _endpoint = config_dict["cart_endpoint"] + "/{}/items".format(cart_id)
+    res = requests.get(_endpoint)
     if res.status_code == 200:
-        return "Successfully Deleted Item"
+        req = res.json()
+        context = dict(status_code=res.status_code, cart_id = cart_id, data=req)
+        return render_template("individual_cart.html", **context)
+
     else:
-        return "Failed to Delete Item"
+        context = dict(status_code=res.status_code)
+        return render_template("individual_cart.html", **context)
 
 
 @application.route("/change_item_count_in_cart/<cart_id>/<item_id>")
@@ -314,46 +320,15 @@ def change_item_count_in_cart(cart_id, item_id):
     return html
 
 
-@application.route("/get_items_in_cart/<cart_id>")
+@application.route("/delete_items_in_cart/<cart_id>/<item_id>")
 @login_required
-def get_items_in_cart(cart_id):
-    _endpoint = config_dict["cart_endpoint"] + "/{}/items".format(cart_id)
-    res = requests.get(_endpoint)
+def delete_items_in_cart(cart_id, item_id):
+    _endpoint = config_dict["cart_endpoint"] + "/" + str(cart_id)
+    res = requests.delete(_endpoint, json={"item_id": item_id})
     if res.status_code == 200:
-        html = ""
-        # return json2html.convert(res.json())
-        req = res.json()
-        # return str(req)
-        for i, item in enumerate(req):
-            item_id = item["item_id"]
-            item[
-                "change count"
-            ] = f"""
-            <form action="/change_item_count_in_cart/{cart_id}/{item_id}">
-                <label for="changeItem"></label>
-                <input type="text", size="1",id="changeItem-{cart_id}-{item_id}" name="changeItem">
-            <input type="submit" value="Update">
-            </form> 
-            """
-            item[
-                "remove"
-            ] = f"<a href='/delete_items_in_cart/{cart_id}/{item_id}'>Remove</a>"
-            req[i] = item
-        headers = (
-            "<tr>" + "".join([f"<th>{val}</th>" for val in req[0].keys()]) + "</tr>"
-        )
-        thead = f"<thead>{headers}</thead>"
-        tbody = [
-            "<tr>" + "".join([f"<td>{val}</td>" for val in row.values()]) + "</tr>"
-            for row in req
-        ]
-        tbody = "\n".join(tbody)
-        tbody = f"<tbody>{tbody}</tbody>"
-        html += f"<table border=1>{thead}{tbody}</table>"
-        html += f"<a href='/checkout/{cart_id}'>Checkout</a>"
-        return html
+        return "Successfully Deleted Item"
     else:
-        return {}
+        return "Failed to Delete Item"
 
 
 @application.route("/checkout/<cart_id>")
