@@ -67,21 +67,8 @@ def microservice_endpoint(name, user_id, appendix=""):
 
 def get_from_microservice(microservice_name, user_id, appendix=""):
     endpoint = microservice_endpoint(microservice_name, user_id, appendix)
-    response = requests.get(endpoint)
-    if response.status_code != 200:
-        abort(response.status_code)
-    else:
-        return response.json()
-
-
-def put_to_microservice(microservice_name, user_id, json, appendix=""):
-    endpoint = microservice_endpoint(microservice_name, user_id, appendix)
-    response = requests.put(endpoint, json=json)
-    print(f"PUT to {endpoint} with response={response}")
-    if response.status_code != 200:
-        abort(response.status_code)
-    else:
-        return response
+    print(appendix, user_id, endpoint)
+    return requests.get(endpoint).json()
 
 
 def get_user(user_id):
@@ -89,51 +76,27 @@ def get_user(user_id):
 
 
 def get_contact(user_id):
-    return {
-        **get_from_microservice("contact", user_id, "/email"),
-        **get_from_microservice("contact", user_id, "/phone"),
-        **get_from_microservice("contact", user_id, "/address"),
-    }
+    return (
+        get_from_microservice("contact", user_id, "/email")
+        | get_from_microservice("contact", user_id, "/phone")
+        | get_from_microservice("contact", user_id, "/address")
+    )
 
 
-def get_profile(user_id):
-    profile = get_user(user_id)
-    profile["data"].update(get_contact(user_id))
-    return profile
-
-
-def put_user(user_id, obj):
-    user = get_user(user_id)["data"]
-    user.pop("user_id")
-    user.update({key: obj[key] for key in ["first_name", "last_name"]})
-    return put_to_microservice("user", user_id, user)
-
-
-def put_contact(user_id, obj):
-    put_to_microservice("contact", user_id, obj, "/email")
-    put_to_microservice("contact", user_id, obj, "/phone")
-    put_to_microservice("contact", user_id, obj, "/address")
-
-
-def put_profile(user_id, profile):
-    put_user(user_id, profile)
-    put_contact(user_id, profile)
-    return get_profile(user_id)
-
-
-@application.route("/profile", methods=["PUT", "GET"])
+@application.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
-    # user_id = current_user.get_id()
-    user_id = 5
+    user_id = current_user.get_id()
     if request.method == "GET":
         user_obj = get_user(user_id)
         contact_obj = get_contact(user_id)
-        user_obj["data"].update(contact_obj)
-        return get_profile(user_id)
-    elif request.method == "PUT":
-        profile = request.json
-        return put_profile(user_id, profile)
+        user_obj["data"] |= contact_obj
+
+        context = dict(user_obj=user_obj)
+        return render_template("profile.html", **context)
+
+    elif request.method == "POST":
+        print(request.json)
 
 
 def update_profile(url, update_item, change):
@@ -254,9 +217,11 @@ def get_items_all(cart_id):
         all_item_endpoint += f"&limit={limit}"
     req = requests.get(all_item_endpoint).json()
 
+
     data = []
 
     for i, item in enumerate(req["data"]):
+
 
         item_id = item["item_id"]
 
@@ -279,14 +244,17 @@ def get_items_all(cart_id):
     html += f"<table border=1>{thead}{tbody}</table>"
 
     prev, next = req["link"][0]["href"], req["link"][-1]["href"]
-    prev = config_dict["eb_endpoint"] + prev
-    next = config_dict["eb_endpoint"] + next
+    prev = config_dict['eb_endpoint'] + prev
+    next = config_dict['eb_endpoint'] + next
+
 
     html += f'<a href="{prev}">previous</a> &nbsp'
     html += f'<a href="{next}">next</a>'
 
+
     context = dict(data=data, prev=prev, next=next)
     return render_template("shopping.html", **context)
+
 
 
 @application.route("/add_to_cart/<cart_id>/<item_id>")
@@ -331,7 +299,7 @@ def get_items_in_cart(cart_id):
     res = requests.get(_endpoint)
     if res.status_code == 200:
         req = res.json()
-        context = dict(status_code=res.status_code, cart_id=cart_id, data=req)
+        context = dict(status_code=res.status_code, cart_id = cart_id, data=req)
         return render_template("individual_cart.html", **context)
 
     else:
@@ -389,15 +357,11 @@ def checkout(cart_id):
 @application.route("/")
 def index():
     if current_user.is_authenticated:
-        data = {
-            "is_authenticated": current_user.is_authenticated,
-            "username": current_user.name,
-            "profile_pic": current_user.profile_pic,
-            "user_id": current_user.id,
-        }
+        data = {'is_authenticated': current_user.is_authenticated, 'username': current_user.name,
+                'profile_pic': current_user.profile_pic, 'user_id': current_user.id}
 
     else:
-        data = {"is_authenticated": current_user.is_authenticated}
+        data = {'is_authenticated': current_user.is_authenticated}
 
     context = dict(data=data)
     return render_template("index.html", **context)
