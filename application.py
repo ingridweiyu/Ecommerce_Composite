@@ -5,7 +5,7 @@ import os
 from flask_cors import CORS
 
 # Third party libraries
-from flask import Flask, redirect, request, url_for, render_template
+from flask import Flask, redirect, Response, request, url_for, render_template
 from flask_login import (
     LoginManager,
     current_user,
@@ -91,7 +91,10 @@ def profile():
         user_obj = get_user(user_id)
         contact_obj = get_contact(user_id)
         user_obj["data"] |= contact_obj
-        return user_obj
+
+        rsp = Response(json.dumps(user_obj), status=200, content_type="application.json")
+        return rsp
+
     elif request.method == "POST":
         print(request.json)
 
