@@ -92,7 +92,7 @@ def profile():
         contact_obj = get_contact(user_id)
         user_obj["data"] |= contact_obj
 
-        rsp = Response(json.dumps(user_obj), status=200, content_type="application.json")
+        rsp = Response(json.dumps(user_obj), status=200, content_type="application/json")
         return rsp
 
     elif request.method == "POST":
