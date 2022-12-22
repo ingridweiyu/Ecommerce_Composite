@@ -16,39 +16,34 @@ from oauthlib.oauth2 import WebApplicationClient
 from oauthlib.oauth2.rfc6749 import endpoints
 import requests
 from middleware import login_required
+from user import User
+
+import numpy as np
 
 with open("config.json") as json_file:
     config_dict = json.load(json_file)
 
-import numpy as np
-
 # ONLY FOR DEVELOPMENT PURPOSES!!!!
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-app = Flask(__name__)
-CORS(app)
-
-from user import User
-
 # Configuration
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
-GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
+# GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
+# GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
 
 GOOGLE_CLIENT_ID = (
     "1085225843617-9eu61l8q5goe0spdntpap4q6n88btbbf.apps.googleusercontent.com"
 )
 GOOGLE_CLIENT_SECRET = "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"
-
+GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
 # Flask app setup
-app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+application = Flask(__name__)
+application.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # User session management setup
 # https://flask-login.readthedocs.io/en/latest
 login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager.init_app(application)
 
 
 @login_manager.unauthorized_handler
@@ -88,7 +83,7 @@ def get_contact(user_id):
     )
 
 
-@app.route("/profile", methods=["GET", "POST"])
+@application.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
     user_id = current_user.get_id()
@@ -117,7 +112,7 @@ def update_profile(url, update_item, change):
     return status_code
 
 
-@app.route("/profile/update_email")
+@application.route("/profile/update_email")
 @login_required
 def update_email():
     user_id = current_user.get_id()
@@ -130,7 +125,7 @@ def update_email():
         return "failed"
 
 
-@app.route("/profile/update_address")
+@application.route("/profile/update_address")
 @login_required
 def update_address():
     user_id = current_user.get_id()
@@ -143,7 +138,7 @@ def update_address():
         return "failed"
 
 
-@app.route("/profile/update_phone")
+@application.route("/profile/update_phone")
 @login_required
 def update_phone():
     user_id = current_user.get_id()
@@ -156,7 +151,7 @@ def update_phone():
         return "failed"
 
 
-@app.route("/shopping/<cart_id>")
+@application.route("/shopping/<cart_id>")
 @login_required
 def get_items_all(cart_id):
     offset = request.args.get("offset")
@@ -195,7 +190,7 @@ def get_items_all(cart_id):
     return html
 
 
-@app.route("/create_cart")
+@application.route("/create_cart")
 @login_required
 def create_cart():
     user_id = current_user.get_id()
@@ -214,7 +209,7 @@ def create_cart():
     return html
 
 
-@app.route("/get_carts")
+@application.route("/get_carts")
 @login_required
 def get_user_cart():
     user_id = current_user.get_id()
@@ -229,7 +224,7 @@ def get_user_cart():
     return render_template("carts.html", **context)
 
 
-@app.route("/delete_cart/<cart_id>")
+@application.route("/delete_cart/<cart_id>")
 @login_required
 def delete_cart(cart_id):
     user_id = current_user.get_id()
@@ -241,7 +236,7 @@ def delete_cart(cart_id):
         return "Failed to Delete Cart"
 
 
-@app.route("/delete_items_in_cart/<cart_id>/<item_id>")
+@application.route("/delete_items_in_cart/<cart_id>/<item_id>")
 @login_required
 def delete_items_in_cart(cart_id, item_id):
     _endpoint = config_dict["cart_endpoint"] + "/" + str(cart_id)
@@ -252,7 +247,7 @@ def delete_items_in_cart(cart_id, item_id):
         return "Failed to Delete Item"
 
 
-@app.route("/change_item_count_in_cart/<cart_id>/<item_id>")
+@application.route("/change_item_count_in_cart/<cart_id>/<item_id>")
 @login_required
 def change_item_count_in_cart(cart_id, item_id):
     new_count = request.args.get("changeItem")
@@ -276,7 +271,7 @@ def change_item_count_in_cart(cart_id, item_id):
     return html
 
 
-@app.route("/get_items_in_cart/<cart_id>")
+@application.route("/get_items_in_cart/<cart_id>")
 @login_required
 def get_items_in_cart(cart_id):
     _endpoint = config_dict["cart_endpoint"] + "/{}/items".format(cart_id)
@@ -318,7 +313,7 @@ def get_items_in_cart(cart_id):
         return {}
 
 
-@app.route("/checkout/<cart_id>")
+@application.route("/checkout/<cart_id>")
 @login_required
 def checkout(cart_id):
     # user_id =
@@ -330,7 +325,7 @@ def checkout(cart_id):
     return html
 
 
-@app.route("/add_to_cart/<cart_id>/<item_id>")
+@application.route("/add_to_cart/<cart_id>/<item_id>")
 @login_required
 def add_to_cart(cart_id, item_id):
     _endpoint = config_dict["cart_endpoint"] + "/{}/items".format(cart_id)
@@ -365,7 +360,7 @@ def add_to_cart(cart_id, item_id):
     return html
 
 
-@app.route("/")
+@application.route("/")
 def index():
     if current_user.is_authenticated:
         data = {'is_authenticated': current_user.is_authenticated, 'username': current_user.name,
@@ -378,7 +373,7 @@ def index():
     return render_template("index.html", **context)
 
 
-@app.route("/login")
+@application.route("/login")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("index"))
@@ -398,7 +393,7 @@ def login():
     return redirect(request_uri)
 
 
-@app.route("/login/callback")
+@application.route("/login/callback")
 def callback():
     # Get authorization code Google sent back to you
     code = request.args.get("code")
@@ -466,7 +461,7 @@ def callback():
     return redirect(url_for("index"))
 
 
-@app.route("/logout")
+@application.route("/logout")
 @login_required
 def logout():
     logout_user()
