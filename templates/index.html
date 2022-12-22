@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to ecommerce website</title>
+</head>
+<body>
+
+{% if data.is_authenticated %}
+    <a>Hello, {{ data.username }}! You're logged in!</a>
+    <a class="button" href="/logout">Logout</a>
+    <br>
+
+    <div><p>Google Profile Picture:</p>
+        <img src="{{ data.profile_pic }}" alt="Google profile pic"></img>
+    </div>
+
+    <br>
+    <a class="button" href="{{ url_for("profile") }}">Profile</a>
+    <br>
+    <br>
+
+    <form action="/profile/update_email">
+        <label for="email">Update your email: </label>
+        <input type="text" id="email" name="email">
+        <input type="submit" value="Submit">
+    </form>
+
+    <form action="/profile/update_address">
+        <label for="address">Update your address: </label>
+        <input type="text" id="address" name="address">
+        <input type="submit" value="Submit">
+    </form>
+
+    <form action="/profile/update_phone">
+        <label for="phone">Update your phone: </label>
+        <input type="text" id="phone" name="phone">
+        <input type="submit" value="Submit">
+    </form>
+    <br>
+
+    <a class="button" href="/get_user_cart">Start Shopping</a>
+{% endif %}
+
+{% if data.is_authenticated == False %}
+    <a class="button" href="/login">Google Login</a>
+{% endif %}
+
+</body>
+</html>

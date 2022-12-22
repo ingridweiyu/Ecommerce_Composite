@@ -5,11 +5,10 @@ import os
 from flask_cors import CORS
 
 # Third party libraries
-from flask import Flask, redirect, request, url_for
+from flask import Flask, redirect, request, url_for, render_template
 from flask_login import (
     LoginManager,
     current_user,
-    login_required,
     login_user,
     logout_user,
 )
@@ -212,8 +211,9 @@ def create_cart(user_id):
     return html
 
 
-@app.route("/get_user_cart/<user_id>")
-def get_user_cart(user_id):
+@app.route("/get_user_cart")
+def get_user_cart():
+    user_id = current_user.get_id()
     _endpoint = config_dict["cart_endpoint"] + "/users/{}".format(user_id)
     res = requests.get(_endpoint)
     html = '<a class="button" href="/create_cart/{}">Start New Cart</a>'.format(
@@ -363,53 +363,14 @@ def add_to_cart(cart_id, item_id):
 @app.route("/")
 def index():
     if current_user.is_authenticated:
-        return (
-            "<a>Hello, {}! You're logged in!</a>"
-            "<a>     &nbsp</a>"
-            '<a class="button" href="/logout">Logout</a>'
-            "<div><p>Google Profile Picture:</p>"
-            '<img src="{}" alt="Google profile pic"></img></div>'
-            "<br>"
-            "<div>Profile</div>"
-            '<a class="button" href="/profile/{}/email">Email</a>'
-            "<a> &nbsp</a>"
-            '<a class="button" href="/profile/{}/address">Address</a>'
-            "<a> &nbsp</a>"
-            '<a class="button" href="/profile/{}/phone">Phone</a>'
-            "<br>"
-            """
-            <form action="/profile/update_email">
-                <label for="email">Update your email: </label>
-                <input type="text" id="email" name="email">
-            <input type="submit" value="Submit">
-            </form> 
-            <form action="/profile/update_address">
-                <label for="address">Update your address: </label>
-                <input type="text" id="address" name="address">
-            <input type="submit" value="Submit">
-            </form> 
-            <form action="/profile/update_phone">
-                <label for="phone">Update your phone: </label>
-                <input type="text" id="phone" name="phone">
-            <input type="submit" value="Submit">
-            </form> 
-            """
-            "<br>"
-            '<a class="button" href="/get_user_cart/{}">Start Shopping</a>'.format(
-                current_user.name,
-                current_user.profile_pic,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-                current_user.id,
-            )
-        )
+        data = {'is_authenticated': current_user.is_authenticated, 'username': current_user.name,
+                'profile_pic': current_user.profile_pic, 'user_id': current_user.id}
+
     else:
-        return '<a class="button" href="/login">Google Login</a>'
+        data = {'is_authenticated': current_user.is_authenticated}
+
+    context = dict(data=data)
+    return render_template("index.html", **context)
 
 
 @app.route("/login")
