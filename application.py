@@ -310,7 +310,7 @@ def get_items_next():
     prev = config_dict["eb_endpoint"] + prev
     next = config_dict["eb_endpoint"] + next
     context = dict(data=data, prev=prev, next=next, cart_id=cart_id)
-    return render_template("shopping_next.html", **context)
+    return render_template("shopping.html", **context)
 
 @application.route("/get_items_prev/")
 @login_required
@@ -332,7 +332,7 @@ def get_items_prev():
     prev = config_dict["eb_endpoint"] + prev
     next = config_dict["eb_endpoint"] + next
     context = dict(data=data, prev=prev, next=next, cart_id=cart_id)
-    return render_template("shopping_next.html", **context)
+    return render_template("shopping.html", **context)
 
 
 @application.route("/add_to_cart/<cart_id>/<item_id>")
