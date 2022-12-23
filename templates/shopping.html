@@ -3,21 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <title>Shopping</title>
+    <style>
+        table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+    </style>
 </head>
 <body>
 
+<div>
     <h1>Start shopping now</h1>
-
-
+    <a class="button" href="/get_items_in_cart/{{cart_id}}">Current Cart</a>
+    <table valign="top">
+  <tr>
+    <th>Item_id</th>
+    <th>Item_name</th>
+    <th>Description</th>
+      <th>Add to Cart</th>
+  </tr>
     {% for l in data %}
-        <span>Item_id: {{ l.item_id }} Item_name: {{ l.item_name }} Description: {{ l.description }}</span>
-        <a href='{{ l.add }}'>add_to_cart</a>
-
-        <br>
+        <tr>
+        <td>{{ l.item_id }}</td> <td>{{ l.item_name }} </td><td>{{ l.description }}</td>
+       <td> <a href='{{ l.add }}'>add_to_cart</a> </td>
+             </tr>
     {% endfor %}
+</table>
 
-    <a href="{{ prev }}">previous</a>
-    <a href="{{ next }}">next</a>
+</div>
+
+
+    <a href="/get_items_next/?url={{ prev }}&cart_id=cart_id">previous</a>
+    <a href="/get_items_next/?url={{ next }}&cart_id=cart_id">next</a>
 
 </body>
 </html>
