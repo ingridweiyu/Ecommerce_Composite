@@ -381,8 +381,10 @@ def get_items_in_cart(cart_id):
         return render_template("individual_cart.html", **context)
 
     else:
-        context = dict(status_code=res.status_code)
-        return render_template("individual_cart.html", **context)
+        # context = dict(status_code=res.status_code)
+        html = "Empty Cart<br><br>"
+        html += '<a class="button" href="/shopping/{}">Continue Shopping</a>'.format(cart_id)
+        return html
 
 
 @application.route("/change_item_count_in_cart/<cart_id>/<item_id>")
@@ -549,4 +551,4 @@ def get_google_provider_cfg():
 
 
 if __name__ == "__main__":
-    application.run(host="127.0.0.1", port=5012)
+    application.run(host="127.0.0.1", port=5012, debug = True)
