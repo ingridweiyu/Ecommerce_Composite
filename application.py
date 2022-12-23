@@ -298,10 +298,9 @@ def get_items_all(cart_id):
     html += f'<a href="{prev}">previous</a> &nbsp'
     html += f'<a href="{next}">next</a>'
 
-
-
     context = dict(data=data, prev=prev, next=next, cart_id=cart_id)
     return render_template("shopping.html", **context)
+
 
 @application.route("/get_items_next/")
 @login_required
@@ -314,16 +313,16 @@ def get_items_next():
     data = []
 
     for i, item in enumerate(req["data"]):
-        item_id = item['item_id']
-        item['add'] = f"/add_to_cart/{cart_id}/{item_id}"
+        item_id = item["item_id"]
+        item["add"] = f"/add_to_cart/{cart_id}/{item_id}"
         data.append(item)
-
 
     prev, next = req["link"][0]["href"], req["link"][-1]["href"]
     prev = config_dict["eb_endpoint"] + prev
     next = config_dict["eb_endpoint"] + next
     context = dict(data=data, prev=prev, next=next, cart_id=cart_id)
     return render_template("shopping.html", **context)
+
 
 @application.route("/get_items_prev/")
 @login_required
@@ -336,10 +335,9 @@ def get_items_prev():
     data = []
 
     for i, item in enumerate(req["data"]):
-        item_id = item['item_id']
-        item['add'] = f"/add_to_cart/{cart_id}/{item_id}"
+        item_id = item["item_id"]
+        item["add"] = f"/add_to_cart/{cart_id}/{item_id}"
         data.append(item)
-
 
     prev, next = req["link"][0]["href"], req["link"][-1]["href"]
     prev = config_dict["eb_endpoint"] + prev

@@ -3,6 +3,7 @@ from flask_login import UserMixin
 import requests, json
 
 USER_URL = "http://ec2-3-87-226-6.compute-1.amazonaws.com:8080/users"
+CONTACT_URL = "http://3.88.66.19:5011/contact"
 
 
 class User(UserMixin):
@@ -14,11 +15,9 @@ class User(UserMixin):
         self.email = email
         self.profile_pic = profile_pic
 
-
     @staticmethod
     def is_authenticated(self):
         return True
-
 
     @staticmethod
     def parseJSON(obj):
@@ -51,4 +50,8 @@ class User(UserMixin):
             "last_name": last_name,
             "picture": profile_pic,
         }
-        requests.post(USER_URL, json=obj)
+        response = requests.post(USER_URL, json=obj)
+        user_id = response.json()["data"]["user_id"]
+        requests.post(CONTACT_URL + f"/{user_id}/email", json={"email": email})
+        requests.post(CONTACT_URL + f"/{user_id}/phone", json={"phone": ""})
+        requests.post(CONTACT_URL + f"/{user_id}/address", json={"address": ""})
