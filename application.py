@@ -5,7 +5,7 @@ import os
 from flask_cors import CORS
 
 # Third party libraries
-from flask import Flask, redirect, Response, request, url_for, render_template
+from flask import Flask, redirect, Response, request, url_for, render_template, abort
 from flask_login import (
     LoginManager,
     current_user,
@@ -100,7 +100,20 @@ def get_contact(user_id):
 def get_profile(user_id):
     profile = get_user(user_id)
     profile["data"].update(get_contact(user_id))
-    return profile
+    html = '<a class="button" href="/">Return to Home</a>'
+    req = profile
+    headers = (
+        "<tr>" + "".join([f"<th>{val}</th>" for val in req["data"].keys()]) + "</tr>"
+    )
+    thead = f"<thead>{headers}</thead>"
+    tbody = [
+        "<tr>" + "".join([f"<td>{val}</td>" for val in req["data"].values()]) + "</tr>"]
+    tbody = "\n".join(tbody)
+    tbody = f"<tbody>{tbody}</tbody>"
+    html += f"<table border=1>{thead}{tbody}</table>"
+
+
+    return html
 
 
 def put_user(user_id, obj):
